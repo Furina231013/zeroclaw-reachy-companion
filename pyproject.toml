@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "zeroclaw-reachy-companion"
+version = "0.1.0"
+description = "Phase 1/2 Reachy Mini companion adapter in a ZeroClaw-style runtime."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = ["pyyaml>=6.0"]
+
+[dependency-groups]
+dev = ["pytest>=8.0"]
+
+[tool.zeroclaw-reachy-companion.optional-runtime-dependencies]
+reachy = [
+  "reachy-mini>=1.2.11",
+  "reachy_mini_dances_library",
+  "python-socks",
+  "mujoco",
+]
+audio = [
+  "numpy",
+  "sounddevice",
+  "soundfile",
+  "torch>=2.4.0",
+  "silero-vad",
+  "faster-whisper",
+  "kokoro-onnx",
+  "huggingface-hub",
+]
+
+[project.scripts]
+zeroclaw-reachy-companion = "zeroclaw_reachy_companion.app:main"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+zeroclaw_reachy_companion = ["profiles/*.yaml"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

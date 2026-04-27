@@ -1,0 +1,115 @@
+version: 1
+description: Phase 1/2 parity scenarios derived from baby-reachy-mini-companion's default tool set.
+
+tool_inventory:
+  original_default_profile:
+    - dance
+    - stop_dance
+    - camera
+    - do_nothing
+    - move_head
+    - send_signal
+    - send_signal_photo
+    - speak
+    - story_time
+    - soothe_baby
+    - check_baby_crying
+    - check_danger
+  migrated_phase12:
+    - dance
+    - stop_dance
+    - stop_emotion
+    - do_nothing
+    - move_head
+    - play_emotion
+    - speak
+    - story_time
+    - soothe_baby
+    - stop_motion
+  intentionally_excluded_phase12:
+    - camera
+    - send_signal
+    - send_signal_photo
+    - check_baby_crying
+    - check_danger
+
+simple_cases:
+  - id: nod_gently
+    prompt: Can you nod gently?
+    original_expected_tools:
+      - move_head
+    companion_expected_tools:
+      - move_head
+      - move_head
+    expected_effects:
+      - head pitch changes and returns through SDK/simulator
+
+  - id: bedtime_story
+    prompt: Tell me a short bedtime story.
+    original_expected_tools:
+      - story_time
+    companion_expected_tools:
+      - play_emotion
+      - story_time
+    expected_effects:
+      - gentle expression
+      - story text sent to speech output
+
+  - id: soothe_baby
+    prompt: Can you soothe the baby?
+    original_expected_tools:
+      - soothe_baby
+    companion_expected_tools:
+      - soothe_baby
+    expected_effects:
+      - calm expression
+      - gentle head motion
+      - soothing speech text
+
+  - id: happy_dance
+    prompt: Do a small happy dance.
+    original_expected_tools:
+      - dance
+    companion_expected_tools:
+      - dance
+    expected_effects:
+      - repeated head yaw/roll motion
+
+  - id: stop_motion
+    prompt: Stop moving.
+    original_expected_tools:
+      - stop_dance
+    companion_expected_tools:
+      - stop_motion
+    expected_effects:
+      - active motion stops or settles
+
+complex_cases:
+  - id: bedtime_then_soothe_then_stop
+    description: Multi-turn story and comfort flow that should stay inside Phase 1/2, with no camera/cry/danger claims.
+    turns:
+      - prompt: Tell me a short bedtime story.
+        companion_expected_tools:
+          - play_emotion
+          - story_time
+      - prompt: Now soothe the baby gently.
+        companion_expected_tools:
+          - soothe_baby
+      - prompt: Stop moving.
+        companion_expected_tools:
+          - stop_motion
+
+  - id: expressive_play_sequence
+    description: Multiple physical expressions in a row, useful for simulator regression checks.
+    turns:
+      - prompt: Can you nod gently?
+        companion_expected_tools:
+          - move_head
+          - move_head
+      - prompt: Do a small happy dance.
+        companion_expected_tools:
+          - dance
+      - prompt: Stop moving.
+        companion_expected_tools:
+          - stop_motion
+
