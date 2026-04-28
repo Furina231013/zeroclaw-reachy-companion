@@ -12,10 +12,11 @@ class ToolResult:
     success: bool
     output: str
     error: str | None = None
+    spoken_text: str | None = None
 
     @classmethod
-    def ok(cls, output: str) -> "ToolResult":
-        return cls(success=True, output=output)
+    def ok(cls, output: str, *, spoken_text: str | None = None) -> "ToolResult":
+        return cls(success=True, output=output, spoken_text=spoken_text)
 
     @classmethod
     def fail(cls, error: str, output: str = "") -> "ToolResult":
@@ -125,4 +126,3 @@ def number_arg(
     if not min_value <= parsed <= max_value:
         raise ValueError(f"{name} must be between {min_value:g} and {max_value:g}")
     return parsed
-

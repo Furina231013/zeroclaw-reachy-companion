@@ -17,7 +17,7 @@ async def _handle(context: ToolContext, args: dict) -> ToolResult:
     await context.reachy.play_emotion("calm")
     await context.reachy.move_head(yaw=0, pitch=-5, roll=0, duration=2.0)
     spoken = await context.reachy.speak(line)
-    return ToolResult.ok(f"soothe_baby complete: {spoken}")
+    return ToolResult.ok(f"soothe_baby complete: {spoken}", spoken_text=line)
 
 
 def tool() -> ToolDefinition:

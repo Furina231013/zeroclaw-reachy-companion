@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import asyncio
 from pathlib import Path
-from typing import Any
 from urllib.request import urlretrieve
 
 from zeroclaw_reachy_companion.reachy.speech_output import clean_spoken_text
@@ -21,11 +20,15 @@ class PrintTTS:
 class KokoroTTS:
     name = "kokoro"
 
-    def __init__(self, output_device: str | None = None, model_path: str = "kokoro-v0_19.onnx", voices_path: str = "voices.npz"):
+    def __init__(
+        self,
+        output_device: str | None = None,
+        model_path: str = "kokoro-v1.0.onnx",
+        voices_path: str = "voices-v1.0.bin",
+    ):
         try:
             import numpy as np
             import sounddevice as sd
-            from huggingface_hub import hf_hub_download
             from kokoro_onnx import Kokoro
         except Exception as exc:  # pragma: no cover - optional dependency
             raise RuntimeError("Kokoro TTS requires the optional audio dependencies.") from exc
@@ -36,12 +39,9 @@ class KokoroTTS:
         model = Path(model_path)
         voices = Path(voices_path)
         if not model.exists():
-            revision = "e9d173129d407bf1378c402aba163de4dde2615e"
-            model_path = hf_hub_download(
-                repo_id="hexgrad/Kokoro-82M",
-                filename="kokoro-v0_19.onnx",
-                local_dir=".",
-                revision=revision,
+            urlretrieve(
+                "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/kokoro-v1.0.onnx",
+                model_path,
             )
         if not voices.exists():
             urlretrieve(

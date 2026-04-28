@@ -21,7 +21,17 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--tool-mode", choices=["json", "native"], default=None)
     parser.add_argument("--vad", dest="vad_backend", choices=["disabled", "silero"], default=None)
     parser.add_argument("--stt", dest="stt_backend", choices=["mock", "faster-whisper"], default=None)
+    parser.add_argument("--stt-model", default=None)
+    parser.add_argument("--stt-language", default=None)
+    parser.add_argument("--stt-initial-prompt", default=None)
+    parser.add_argument("--stt-hotwords", default=None)
     parser.add_argument("--tts", dest="tts_backend", choices=["print", "kokoro"], default=None)
+    parser.add_argument("--listen-mode", choices=["enter", "continuous"], default=None)
+    parser.add_argument("--continuous-start-rms", type=float, default=None)
+    parser.add_argument("--continuous-stop-rms", type=float, default=None)
+    parser.add_argument("--continuous-silence-s", type=float, default=None)
+    parser.add_argument("--continuous-min-speech-s", type=float, default=None)
+    parser.add_argument("--continuous-max-utterance-s", type=float, default=None)
     parser.add_argument("--audio-input-device", default=None)
     parser.add_argument("--audio-output-device", default=None)
     parser.add_argument("--log-level", default=None)
@@ -51,4 +61,3 @@ def main(argv: list[str] | None = None) -> None:
 
 if __name__ == "__main__":
     main()
-

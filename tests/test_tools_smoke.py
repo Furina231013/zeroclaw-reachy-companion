@@ -8,7 +8,7 @@ import pytest
 from zeroclaw_reachy_companion.config import AppConfig
 from zeroclaw_reachy_companion.reachy import ReachyClient
 from zeroclaw_reachy_companion.runtime.text_chat_loop import ReachyCompanionRuntime
-from zeroclaw_reachy_companion.runtime.voice_chat_loop import create_voice_harness
+from zeroclaw_reachy_companion.runtime.voice_chat_loop import create_voice_harness, tts_texts_for_turn
 from zeroclaw_reachy_companion.tools import create_tool_registry
 
 
@@ -33,6 +33,7 @@ def test_speak_tool_dry_run_returns_success() -> None:
         result = await registry.execute("speak", {"text": "Hello from smoke test."})
         assert result.success
         assert "spoke:" in result.output
+        assert result.spoken_text == "Hello from smoke test."
 
     run(scenario())
 
@@ -79,6 +80,21 @@ def test_voice_fallback_single_turn_no_audio_dependencies() -> None:
             assert result.tools[0].call.name == "soothe_baby"
         finally:
             await harness.runtime.close()
+
+    run(scenario())
+
+
+def test_voice_turn_tts_includes_tool_spoken_text() -> None:
+    async def scenario() -> None:
+        config = AppConfig(mode="voice", reachy_mode="dry_run", llm_backend="mock", tts_backend="print")
+        runtime = await ReachyCompanionRuntime.create(config)
+        try:
+            result = await runtime.handle_text("Can you soothe the baby?", announce=False)
+            texts = tts_texts_for_turn(result)
+            assert "Of course. I'll be gentle." in texts
+            assert any("slow, soft breath" in text for text in texts)
+        finally:
+            await runtime.close()
 
     run(scenario())
 

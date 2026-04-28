@@ -142,19 +142,70 @@ uv run python -m zeroclaw_reachy_companion.app \
 uv pip install numpy sounddevice soundfile torch silero-vad faster-whisper kokoro-onnx huggingface-hub
 ```
 
-然后运行：
+单轮 Enter-to-record 测试：
 
 ```bash
 uv run python -m zeroclaw_reachy_companion.app \
   --mode voice \
   --reachy-mode dry_run \
-  --vad silero \
+  --llm mock \
+  --vad disabled \
   --stt faster-whisper \
+  --stt-model small.en \
+  --stt-language en \
+  --tts print
+```
+
+这条命令会打印 `[audio]` 音量摘要、`[ASR]` 转写文本和 `[TTS]` 实际送给 TTS 的文本。
+确认 ASR 稳定后，把 `--tts print` 改成 `--tts kokoro` 测试真实扬声器输出。
+
+使用 LM Studio + Kokoro 的真实语音闭环：
+
+```bash
+uv run python -m zeroclaw_reachy_companion.app \
+  --mode voice \
+  --reachy-mode dry_run \
+  --local-llm-url http://127.0.0.1:1234/v1 \
+  --local-llm-model qwen/qwen3-vl-8b \
+  --llm ollama \
+  --tool-mode native \
+  --vad disabled \
+  --stt faster-whisper \
+  --stt-model small.en \
+  --stt-language en \
   --tts kokoro
 ```
 
-当前真实音频循环是按 Enter 开始和结束一次录音。Silero、Faster-Whisper 和 Kokoro 只会在
-被选中时懒加载。
+持续监听模式：
+
+```bash
+uv run python -m zeroclaw_reachy_companion.app \
+  --mode voice \
+  --reachy-mode dry_run \
+  --local-llm-url http://127.0.0.1:1234/v1 \
+  --local-llm-model qwen/qwen3-vl-8b \
+  --llm ollama \
+  --tool-mode native \
+  --vad disabled \
+  --stt faster-whisper \
+  --stt-model small.en \
+  --stt-language en \
+  --tts kokoro \
+  --listen-mode continuous
+```
+
+持续监听使用轻量 RMS 阈值切分语音。可以用这些参数调节灵敏度：
+
+```bash
+--continuous-start-rms 0.010 \
+--continuous-stop-rms 0.006 \
+--continuous-silence-s 0.8 \
+--continuous-min-speech-s 0.35 \
+--continuous-max-utterance-s 8.0
+```
+
+持续监听时可以说 `stop listening` 退出，说 `pause listening` 暂停；暂停后按 Enter 恢复。
+Silero、Faster-Whisper 和 Kokoro 都只会在被选中时懒加载。
 
 ## 连接 Reachy simulator 或真机
 

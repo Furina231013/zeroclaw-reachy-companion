@@ -42,6 +42,10 @@ def _optional_int(value: Any) -> int | None:
     return int(value)
 
 
+def _float_value(cli_value: Any, env_key: str, default: float) -> float:
+    return float(_first_value(cli_value, env_key, default))
+
+
 def _bool_env(name: str, default: bool) -> bool:
     value = os.getenv(name)
     if value is None:
@@ -64,7 +68,20 @@ class AppConfig:
     tool_mode: str = "json"
     vad_backend: str = "disabled"
     stt_backend: str = "mock"
+    stt_model: str = "base.en"
+    stt_language: str | None = "en"
+    stt_initial_prompt: str = (
+        "Reachy Mini baby companion commands: soothe the baby, comfort the baby, "
+        "tell a bedtime story, nod gently, do a small happy dance, stay quiet."
+    )
+    stt_hotwords: str = "soothe baby, comfort baby, bedtime story, nod gently, happy dance, stay quiet"
     tts_backend: str = "print"
+    listen_mode: str = "enter"
+    continuous_start_rms: float = 0.010
+    continuous_stop_rms: float = 0.006
+    continuous_silence_s: float = 0.8
+    continuous_min_speech_s: float = 0.35
+    continuous_max_utterance_s: float = 8.0
     audio_input_device: str | None = None
     audio_output_device: str | None = None
     log_level: str = "INFO"
@@ -90,7 +107,48 @@ class AppConfig:
             tool_mode=_first_value(getattr(args, "tool_mode", None), "TOOL_MODE", "json"),
             vad_backend=_first_value(getattr(args, "vad_backend", None), "VAD_BACKEND", "disabled"),
             stt_backend=_first_value(getattr(args, "stt_backend", None), "STT_BACKEND", "mock"),
+            stt_model=_first_value(getattr(args, "stt_model", None), "STT_MODEL", "base.en"),
+            stt_language=_first_value(getattr(args, "stt_language", None), "STT_LANGUAGE", "en"),
+            stt_initial_prompt=_first_value(
+                getattr(args, "stt_initial_prompt", None),
+                "STT_INITIAL_PROMPT",
+                (
+                    "Reachy Mini baby companion commands: soothe the baby, comfort the baby, "
+                    "tell a bedtime story, nod gently, do a small happy dance, stay quiet."
+                ),
+            ),
+            stt_hotwords=_first_value(
+                getattr(args, "stt_hotwords", None),
+                "STT_HOTWORDS",
+                "soothe baby, comfort baby, bedtime story, nod gently, happy dance, stay quiet",
+            ),
             tts_backend=_first_value(getattr(args, "tts_backend", None), "TTS_BACKEND", "print"),
+            listen_mode=_first_value(getattr(args, "listen_mode", None), "LISTEN_MODE", "enter"),
+            continuous_start_rms=_float_value(
+                getattr(args, "continuous_start_rms", None),
+                "CONTINUOUS_START_RMS",
+                0.010,
+            ),
+            continuous_stop_rms=_float_value(
+                getattr(args, "continuous_stop_rms", None),
+                "CONTINUOUS_STOP_RMS",
+                0.006,
+            ),
+            continuous_silence_s=_float_value(
+                getattr(args, "continuous_silence_s", None),
+                "CONTINUOUS_SILENCE_S",
+                0.8,
+            ),
+            continuous_min_speech_s=_float_value(
+                getattr(args, "continuous_min_speech_s", None),
+                "CONTINUOUS_MIN_SPEECH_S",
+                0.35,
+            ),
+            continuous_max_utterance_s=_float_value(
+                getattr(args, "continuous_max_utterance_s", None),
+                "CONTINUOUS_MAX_UTTERANCE_S",
+                8.0,
+            ),
             audio_input_device=_first_value(getattr(args, "audio_input_device", None), "AUDIO_INPUT_DEVICE", None),
             audio_output_device=_first_value(getattr(args, "audio_output_device", None), "AUDIO_OUTPUT_DEVICE", None),
             log_level=_first_value(getattr(args, "log_level", None), "LOG_LEVEL", "INFO"),
@@ -155,4 +213,3 @@ def load_profile(name: str = "baby_companion") -> Profile:
         description=str(data.get("description") or ""),
         system_prompt=str(data.get("system_prompt") or ""),
     )
-

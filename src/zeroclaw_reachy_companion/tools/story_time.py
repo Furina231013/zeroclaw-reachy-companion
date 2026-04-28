@@ -6,9 +6,10 @@ from zeroclaw_reachy_companion.tools.base import ToolContext, ToolDefinition, To
 
 async def _handle(context: ToolContext, args: dict) -> ToolResult:
     topic = optional_string(args, "topic", default="bedtime", max_len=120)
+    story = short_story(topic)
     await context.reachy.play_emotion("gentle")
-    spoken = await context.reachy.speak(short_story(topic))
-    return ToolResult.ok(f"story_time complete: {spoken}")
+    spoken = await context.reachy.speak(story)
+    return ToolResult.ok(f"story_time complete: {spoken}", spoken_text=story)
 
 
 def tool() -> ToolDefinition:
