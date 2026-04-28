@@ -17,7 +17,10 @@ def tool() -> ToolDefinition:
     """Move Reachy Mini's head by compact yaw/pitch/roll degrees."""
     return ToolDefinition(
         name="move_head",
-        description="Move the robot head using yaw, pitch, and roll degrees for nodding, turning, or tilting.",
+        description=(
+            "Use for subtle nods, greetings, or gentle expression. "
+            "Avoid large motion during quiet, bedtime, or calming contexts."
+        ),
         parameters={
             "type": "object",
             "properties": {
@@ -30,4 +33,3 @@ def tool() -> ToolDefinition:
         },
         handler=_handle,
     )
-

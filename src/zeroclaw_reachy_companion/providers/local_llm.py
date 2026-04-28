@@ -115,7 +115,18 @@ def parse_json_command(text: str) -> AgentCommand:
 def command_from_text(user_text: str) -> AgentCommand:
     """Deterministic local fallback for demos and tests when Ollama is absent."""
     text = user_text.lower()
-    if "story" in text or "bedtime" in text:
+    if "quiet" in text or "silence" in text:
+        return AgentCommand(
+            speak="Okay, I'll stay quiet.",
+            tools=[ToolCallCommand("do_nothing", {"reason": "quiet request"})],
+            raw_text=user_text,
+        )
+    if any(pattern in text for pattern in ("what is", "explain", "why is", "how does")):
+        return AgentCommand(
+            speak="I'll keep the answer brief.",
+            raw_text=user_text,
+        )
+    if "story" in text:
         return AgentCommand(
             speak="I'll tell a tiny bedtime story.",
             tools=[
@@ -124,10 +135,16 @@ def command_from_text(user_text: str) -> AgentCommand:
             ],
             raw_text=user_text,
         )
-    if "soothe" in text or "comfort" in text or "calm" in text:
+    if any(word in text for word in ("soothe", "comfort", "calm", "upset", "sleepy", "settle down", "bedtime")):
         return AgentCommand(
             speak="Of course. I'll be gentle.",
             tools=[ToolCallCommand("soothe_baby", {"style": "gentle"})],
+            raw_text=user_text,
+        )
+    if ("keep" in text and "company" in text) or "say hello" in text:
+        return AgentCommand(
+            speak="I'm here with him.",
+            tools=[ToolCallCommand("speak", {"text": "I'm here with him."})],
             raw_text=user_text,
         )
     if "dance" in text:

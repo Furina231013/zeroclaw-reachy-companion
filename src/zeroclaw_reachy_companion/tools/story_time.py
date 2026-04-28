@@ -15,7 +15,10 @@ def tool() -> ToolDefinition:
     """Tell a short gentle story."""
     return ToolDefinition(
         name="story_time",
-        description="Tell a short gentle children's story. Use when the user asks for a story or bedtime narration.",
+        description=(
+            "Use for story requests, bedtime story, or short gentle narrative. "
+            "Do not use for factual one-sentence explanations unless the user asks for a story."
+        ),
         parameters={
             "type": "object",
             "properties": {
@@ -28,4 +31,3 @@ def tool() -> ToolDefinition:
         },
         handler=_handle,
     )
-

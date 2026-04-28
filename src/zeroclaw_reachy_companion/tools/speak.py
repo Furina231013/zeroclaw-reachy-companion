@@ -12,7 +12,7 @@ def tool() -> ToolDefinition:
     """Speak short text aloud through Reachy/TTS output."""
     return ToolDefinition(
         name="speak",
-        description="Speak a short child-friendly sentence aloud. Use for direct verbal robot responses.",
+        description="Use for short spoken responses. Keep text concise because it may be sent to TTS.",
         parameters={
             "type": "object",
             "properties": {
@@ -25,4 +25,3 @@ def tool() -> ToolDefinition:
         },
         handler=_handle,
     )
-

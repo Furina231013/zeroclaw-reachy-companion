@@ -16,10 +16,13 @@ async def _handle(context: ToolContext, args: dict) -> ToolResult:
 
 
 def tool() -> ToolDefinition:
-    """Start a short dance or rhythmic expressive motion."""
+    """Start a dance only for explicit playful or celebratory requests."""
     return ToolDefinition(
         name="dance",
-        description="Do a short expressive dance or rhythmic motion. Use for dance, celebration, or playful movement.",
+        description=(
+            "Use only when the user explicitly asks for dancing, celebration, or playful movement. "
+            "Do not use during bedtime, quiet time, calming, upset baby, or factual explanation."
+        ),
         parameters={
             "type": "object",
             "properties": {
@@ -30,4 +33,3 @@ def tool() -> ToolDefinition:
         },
         handler=_handle,
     )
-

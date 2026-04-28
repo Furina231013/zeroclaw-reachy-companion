@@ -342,6 +342,39 @@ uv run --group dev pytest tests/test_lm_studio_sim_integration.py -s
 这组测试会同时验证真实本地模型的工具选择，以及真实 Reachy SDK simulator 效果，包括会
 产生动作的工具是否带来关节状态变化。
 
+## 行为测试
+
+行为测试分三类：语义测试检查自然语言隐含意图；克制测试检查机器人不会对普通输入过度
+动作；mock 事件测试在没有真实 ASR、TTS、camera、YAMNet、YOLO 或 Signal 的情况下模拟
+外部传感事件。
+
+已有的直接命令集成测试：
+
+```bash
+RUN_LOCAL_LM_STUDIO_SIM_TESTS=1 \
+uv run --group dev pytest tests/test_lm_studio_sim_integration.py -s
+```
+
+新的语义行为测试：
+
+```bash
+RUN_LOCAL_LM_STUDIO_SIM_TESTS=1 \
+uv run --group dev pytest tests/test_lm_studio_sim_semantic_behavior.py -s
+```
+
+新的克制行为测试：
+
+```bash
+RUN_LOCAL_LM_STUDIO_SIM_TESTS=1 \
+uv run --group dev pytest tests/test_lm_studio_sim_restraint_behavior.py -s
+```
+
+mock 事件测试不需要 LM Studio 或 simulator：
+
+```bash
+uv run --group dev pytest tests/test_mock_event_router.py -s
+```
+
 ## 工具迁移状态
 
 当前与原 app 默认 profile 的对标状态：

@@ -13,7 +13,10 @@ def tool() -> ToolDefinition:
     """Play a simple named emotion."""
     return ToolDefinition(
         name="play_emotion",
-        description="Play a simple emotional expression such as gentle, happy, calm, sleepy, or excited.",
+        description=(
+            "Play a simple emotional expression such as gentle, happy, calm, sleepy, or excited. "
+            "Prefer gentle, calm, or sleepy emotions for bedtime, quiet, or comfort contexts."
+        ),
         parameters={
             "type": "object",
             "properties": {
@@ -26,4 +29,3 @@ def tool() -> ToolDefinition:
         },
         handler=_handle,
     )
-

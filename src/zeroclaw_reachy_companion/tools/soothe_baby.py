@@ -24,7 +24,10 @@ def tool() -> ToolDefinition:
     """Soothe with calm speech and gentle motion."""
     return ToolDefinition(
         name="soothe_baby",
-        description="Soothe or comfort with a calm expression, gentle head motion, and a short reassuring line.",
+        description=(
+            "Use for comfort, calming, bedtime settling, upset baby, gentle reassurance, "
+            "or when a baby cry event is provided. Do not use for ordinary factual questions."
+        ),
         parameters={
             "type": "object",
             "properties": {
@@ -37,4 +40,3 @@ def tool() -> ToolDefinition:
         },
         handler=_handle,
     )
-
