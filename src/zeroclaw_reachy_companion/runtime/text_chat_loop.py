@@ -83,13 +83,35 @@ class ReachyCompanionRuntime:
 
     async def handle_text(self, user_text: str, *, announce: bool = True) -> CompanionTurnResult:
         command, used_fallback = await self._command_for_text(user_text, announce=announce)
-        guarded = _guard_command(command, user_text=user_text, state=self.state)
-        command = guarded.command
-        for skipped in guarded.skipped_tools:
-            logger.info("Skipped tool call after behavior guard: %s", skipped)
-            if announce:
-                print(f"[guard] skipped tool: {skipped}")
-        return await self._execute_command(command, announce=announce, used_fallback=used_fallback)
+        return await self.handle_command(
+            command,
+            user_text=user_text,
+            announce=announce,
+            used_fallback=used_fallback,
+        )
+
+    async def handle_command(
+        self,
+        command: AgentCommand,
+        *,
+        user_text: str = "",
+        announce: bool = True,
+        used_fallback: bool = False,
+        event_type: str | None = None,
+    ) -> CompanionTurnResult:
+        if user_text:
+            guarded = _guard_command(command, user_text=user_text, state=self.state)
+            command = guarded.command
+            for skipped in guarded.skipped_tools:
+                logger.info("Skipped tool call after behavior guard: %s", skipped)
+                if announce:
+                    print(f"[guard] skipped tool: {skipped}")
+        return await self._execute_command(
+            command,
+            announce=announce,
+            used_fallback=used_fallback,
+            event_type=event_type,
+        )
 
     async def handle_event(
         self,

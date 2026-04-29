@@ -10,7 +10,7 @@ from zeroclaw_reachy_companion.runtime import run_text_loop, run_voice_loop
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser("ZeroClaw Reachy Companion")
-    parser.add_argument("--mode", choices=["text", "voice"], default=None)
+    parser.add_argument("--mode", choices=["text", "voice", "service"], default=None)
     parser.add_argument("--profile", default=None)
     parser.add_argument("--reachy-mode", choices=["dry_run", "sim", "real"], default=None)
     parser.add_argument("--reachy-host", default=None)
@@ -34,6 +34,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--continuous-max-utterance-s", type=float, default=None)
     parser.add_argument("--audio-input-device", default=None)
     parser.add_argument("--audio-output-device", default=None)
+    parser.add_argument("--service-host", default=None)
+    parser.add_argument("--service-port", type=int, default=None)
+    parser.add_argument("--service-default-timeout-s", type=float, default=None)
+    parser.add_argument("--service-max-queue-size", type=int, default=None)
+    parser.add_argument("--service-job-history-limit", type=int, default=None)
+    parser.add_argument("--zeroclaw-text-url", default=None)
+    parser.add_argument("--zeroclaw-text-token", default=None)
     parser.add_argument("--log-level", default=None)
     parser.add_argument("--max-tool-turns", type=int, default=None)
     return parser
@@ -43,7 +50,11 @@ async def async_main(argv: list[str] | None = None) -> None:
     args = build_parser().parse_args(argv)
     config = AppConfig.from_args(args)
     logging.basicConfig(level=getattr(logging, config.log_level.upper(), logging.INFO))
-    if config.mode == "voice":
+    if config.mode == "service":
+        from zeroclaw_reachy_companion.service import run_service
+
+        await run_service(config)
+    elif config.mode == "voice":
         await run_voice_loop(config)
     else:
         await run_text_loop(config)

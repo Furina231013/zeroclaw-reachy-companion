@@ -7,6 +7,7 @@ from zeroclaw_reachy_companion.audio import create_stt_backend, create_tts_backe
 from zeroclaw_reachy_companion.audio.audio_io import ContinuousListenConfig
 from zeroclaw_reachy_companion.audio.speech_loop import capture_utterance
 from zeroclaw_reachy_companion.config import AppConfig
+from zeroclaw_reachy_companion.providers.zeroclaw_client import ZeroClawTextClient
 from zeroclaw_reachy_companion.reachy.speech_output import clean_spoken_text
 from zeroclaw_reachy_companion.runtime.text_chat_loop import AgentTurnResult, ReachyCompanionRuntime
 
@@ -33,6 +34,11 @@ class VoiceFallbackHarness:
 async def create_voice_harness(config: AppConfig) -> VoiceFallbackHarness:
     runtime = await ReachyCompanionRuntime.create(config)
     tts = create_tts_backend(config.tts_backend, output_device=config.audio_output_device)
+    zeroclaw_client = (
+        ZeroClawTextClient(config.zeroclaw_text_url, bearer_token=config.zeroclaw_text_token)
+        if config.zeroclaw_text_url
+        else None
+    )
     return VoiceFallbackHarness(runtime=runtime, tts=tts)
 
 
@@ -61,6 +67,8 @@ async def run_voice_loop(config: AppConfig) -> None:
         print(f"Reachy mode: {config.reachy_mode}")
         print(f"Voice mode: {'fallback' if fallback else 'local-audio'}")
         print(f"Listen mode: {config.listen_mode}")
+        if zeroclaw_client is not None:
+            print(f"Text logic: ZeroClaw bridge at {config.zeroclaw_text_url}")
         if config.listen_mode == "continuous":
             print("Say 'stop listening' to exit, 'pause listening' to pause, or press Ctrl+C.")
         else:
@@ -84,7 +92,11 @@ async def run_voice_loop(config: AppConfig) -> None:
                 await asyncio.to_thread(input)
                 print("[voice] Resumed.")
                 continue
-            result = await runtime.handle_text(text, announce=True)
+            if zeroclaw_client is not None:
+                command = await zeroclaw_client.command_for_text(text)
+                result = await runtime.handle_command(command, user_text=text, announce=True)
+            else:
+                result = await runtime.handle_text(text, announce=True)
             for tts_text in tts_texts_for_turn(result):
                 print(f"[TTS] {tts_text}")
                 await tts.speak(tts_text)

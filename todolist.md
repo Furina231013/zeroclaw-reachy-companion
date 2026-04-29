@@ -30,41 +30,42 @@
 
 目标：把 Reachy 执行能力从当前进程内调用抽成独立 Python 服务，供外部运行时调用。
 
-- [ ] 明确服务边界：工具注册、工具 schema、工具执行、状态查询、事件注入。
-- [ ] 选择服务协议：优先考虑 HTTP/JSON；如后续需要流式能力，再补 WebSocket。
-- [ ] 设计 API：
-  - [ ] `GET /health`
-  - [ ] `GET /tools`
-  - [ ] `POST /tools/{name}/execute`
-  - [ ] `POST /turns/text`
-  - [ ] `POST /events`
-  - [ ] `GET /state`
-- [ ] 把 `ReachyCompanionRuntime` 封装进服务生命周期。
-- [ ] 支持 `dry_run`、`sim`、`real` 三种 Reachy 模式。
-- [ ] 保持当前 CLI 路径可用，不因为服务化被破坏。
-- [ ] 增加服务级测试：health、tools list、dry-run execute、mock event。
-- [ ] 在 README 中补充服务启动命令和 API 示例。
+- [x] 明确服务边界：工具注册、工具 schema、工具执行、状态查询、事件注入。
+- [x] 选择服务协议：优先考虑 HTTP/JSON；如后续需要流式能力，再补 WebSocket。
+- [x] 设计 API：
+  - [x] `GET /health`
+  - [x] `GET /tools`
+  - [x] `POST /tools/{name}/execute`
+  - [x] `POST /turns/text`
+  - [x] `POST /events`
+  - [x] `GET /state`
+- [x] 把 `ReachyCompanionRuntime` 封装进服务生命周期。
+- [x] 支持 `dry_run`、`sim`、`real` 三种 Reachy 模式。
+- [x] 保持当前 CLI 路径可用，不因为服务化被破坏。
+- [x] 增加服务级测试：health、tools list、dry-run execute、mock event。
+- [x] 在 README 中补充服务启动命令和 API 示例。
+- [x] 在真实 ZeroClaw 接入前，补充 HTTP 超时、取消和长动作队列策略。
 
 验收标准：
 
-- [ ] Python 服务可独立启动。
-- [ ] 通过 HTTP 可以列出工具并执行工具。
-- [ ] 通过 HTTP 可以注入 mock event。
-- [ ] 当前本地测试仍然通过。
+- [x] Python 服务可独立启动。
+- [x] 通过 HTTP 可以列出工具并执行工具。
+- [x] 通过 HTTP 可以注入 mock event。
+- [x] 当前本地测试仍然通过。
 
 ## 3. 让完整的 ZeroClaw 调用这个服务
 
 目标：让真正的 ZeroClaw Rust 运行时通过服务调用 Reachy Companion 执行层。
 
-- [ ] 在 ZeroClaw 侧确认工具接口需要的字段：名称、描述、参数 schema、执行结果结构。
-- [ ] 在 Python 服务中提供 ZeroClaw 友好的工具 schema 输出。
-- [ ] 在 ZeroClaw 中增加 Python service client。
-- [ ] 把服务中的工具映射成 ZeroClaw `Tool` 实现或 bridge tool。
-- [ ] 打通 ZeroClaw -> Python service -> Reachy dry-run。
+- [x] 在 ZeroClaw 侧确认工具接口需要的字段：名称、描述、参数 schema、执行结果结构。
+- [x] 在 Python 服务中提供 ZeroClaw 友好的工具 schema 输出。
+- [x] 在 ZeroClaw 中增加 Python service client。
+- [x] 把服务中的工具映射成 ZeroClaw `Tool` 实现或 bridge tool。
+- [x] 打通 ZeroClaw -> Python service -> Reachy dry-run。
 - [ ] 打通 ZeroClaw -> Python service -> Reachy simulator。
-- [ ] 对齐错误结构、超时、取消和日志格式。
-- [ ] 增加跨进程集成测试或脚本。
-- [ ] 在 README 中补充完整 ZeroClaw 调用路径。
+- [x] 对齐基础错误结构和执行超时；取消仍由 Python 服务 job API 负责，ZeroClaw 侧暂未暴露 cancel 工具。
+- [x] 增加跨进程集成测试或脚本。
+- [x] 在 README 中补充完整 ZeroClaw 调用路径。
 
 验收标准：
 

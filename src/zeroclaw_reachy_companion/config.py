@@ -84,6 +84,13 @@ class AppConfig:
     continuous_max_utterance_s: float = 8.0
     audio_input_device: str | None = None
     audio_output_device: str | None = None
+    service_host: str = "127.0.0.1"
+    service_port: int = 8765
+    service_default_timeout_s: float = 20.0
+    service_max_queue_size: int = 16
+    service_job_history_limit: int = 100
+    zeroclaw_text_url: str | None = None
+    zeroclaw_text_token: str | None = None
     log_level: str = "INFO"
     max_tool_turns: int = 4
     allow_heuristic_fallback: bool = True
@@ -151,6 +158,25 @@ class AppConfig:
             ),
             audio_input_device=_first_value(getattr(args, "audio_input_device", None), "AUDIO_INPUT_DEVICE", None),
             audio_output_device=_first_value(getattr(args, "audio_output_device", None), "AUDIO_OUTPUT_DEVICE", None),
+            service_host=_first_value(getattr(args, "service_host", None), "SERVICE_HOST", "127.0.0.1"),
+            service_port=int(_first_value(getattr(args, "service_port", None), "SERVICE_PORT", 8765)),
+            service_default_timeout_s=_float_value(
+                getattr(args, "service_default_timeout_s", None),
+                "SERVICE_DEFAULT_TIMEOUT_S",
+                20.0,
+            ),
+            service_max_queue_size=int(
+                _first_value(getattr(args, "service_max_queue_size", None), "SERVICE_MAX_QUEUE_SIZE", 16)
+            ),
+            service_job_history_limit=int(
+                _first_value(getattr(args, "service_job_history_limit", None), "SERVICE_JOB_HISTORY_LIMIT", 100)
+            ),
+            zeroclaw_text_url=_first_value(getattr(args, "zeroclaw_text_url", None), "ZEROCLAW_TEXT_URL", None),
+            zeroclaw_text_token=_first_value(
+                getattr(args, "zeroclaw_text_token", None),
+                "ZEROCLAW_TEXT_TOKEN",
+                None,
+            ),
             log_level=_first_value(getattr(args, "log_level", None), "LOG_LEVEL", "INFO"),
             max_tool_turns=int(_first_value(getattr(args, "max_tool_turns", None), "MAX_TOOL_TURNS", 4)),
             allow_heuristic_fallback=_bool_env("ALLOW_HEURISTIC_FALLBACK", True),

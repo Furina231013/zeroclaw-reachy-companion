@@ -207,6 +207,25 @@ uv run python -m zeroclaw_reachy_companion.app \
 持续监听时可以说 `stop listening` 退出，说 `pause listening` 暂停；暂停后按 Enter 恢复。
 Silero、Faster-Whisper 和 Kokoro 都只会在被选中时懒加载。
 
+如果希望 Reachy 语音层只负责 ASR/TTS，而文字逻辑交给完整 ZeroClaw，可以配置反调通道。
+`ZEROCLAW_TEXT_URL` 指向 ZeroClaw 的文本 turn 接口；Reachy 层会把 ASR 文本发过去，接收
+`final_text`，再在本地播放 TTS。动作工具由 ZeroClaw 在运行过程中通过 Reachy 执行服务触发。
+如果 ZeroClaw gateway 开启了 pairing，需要同时传 `--zeroclaw-text-token` 或设置
+`ZEROCLAW_TEXT_TOKEN`。
+
+```bash
+uv run python -m zeroclaw_reachy_companion.app \
+  --mode voice \
+  --reachy-mode dry_run \
+  --zeroclaw-text-url http://127.0.0.1:9000/api/turns/text \
+  --vad disabled \
+  --stt faster-whisper \
+  --stt-model small.en \
+  --stt-language en \
+  --tts kokoro \
+  --listen-mode continuous
+```
+
 ## 连接 Reachy simulator 或真机
 
 ### 启动无窗口 simulator
@@ -224,6 +243,150 @@ uv run python -m zeroclaw_reachy_companion.app \
   --mode text \
   --reachy-mode sim \
   --llm mock
+```
+
+## Reachy 执行服务
+
+第二阶段开始把 Reachy 执行能力抽成独立 Python 服务。服务仍然运行在 Reachy 层，负责
+工具注册、工具执行、mock event、状态查询，以及将来承接 ASR/TTS 语音入口；ZeroClaw
+侧只需要处理文字逻辑和工具选择。
+
+启动 dry-run 服务：
+
+```bash
+uv run python -m zeroclaw_reachy_companion.app \
+  --mode service \
+  --reachy-mode dry_run \
+  --llm mock \
+  --service-host 127.0.0.1 \
+  --service-port 8765
+```
+
+查看健康状态和工具：
+
+```bash
+curl http://127.0.0.1:8765/health
+curl http://127.0.0.1:8765/tools
+curl 'http://127.0.0.1:8765/tools?format=openai'
+```
+
+执行一个工具：
+
+```bash
+curl -X POST http://127.0.0.1:8765/tools/soothe_baby/execute \
+  -H 'Content-Type: application/json' \
+  -d '{"arguments":{"style":"gentle"}}'
+```
+
+给单次执行设置超时：
+
+```bash
+curl -X POST http://127.0.0.1:8765/tools/dance/execute \
+  -H 'Content-Type: application/json' \
+  -d '{"arguments":{"style":"happy","duration":8},"timeout_s":3}'
+```
+
+长动作可以异步入队，避免调用方一直阻塞：
+
+```bash
+curl -X POST http://127.0.0.1:8765/tools/dance/execute \
+  -H 'Content-Type: application/json' \
+  -d '{"arguments":{"style":"happy","duration":8},"wait":false}'
+```
+
+响应会返回 `job_id`。可以查询队列和 job 状态：
+
+```bash
+curl http://127.0.0.1:8765/jobs
+curl http://127.0.0.1:8765/jobs/<job_id>
+```
+
+取消排队或正在运行的 job：
+
+```bash
+curl -X POST http://127.0.0.1:8765/jobs/<job_id>/cancel
+```
+
+服务执行层使用单 worker FIFO 队列，保证同一时间只驱动一个 Reachy 动作。超时或取消正在运行
+的动作后，服务会尽量调用 `stop_motion` 让机器人停稳。
+
+注入 mock event：
+
+```bash
+curl -X POST http://127.0.0.1:8765/events \
+  -H 'Content-Type: application/json' \
+  -d '{"type":"baby_cry_detected","confidence":0.92,"source":"mock"}'
+```
+
+调试本地文本 turn：
+
+```bash
+curl -X POST http://127.0.0.1:8765/turns/text \
+  -H 'Content-Type: application/json' \
+  -d '{"text":"Can you nod gently?"}'
+```
+
+## 完整 ZeroClaw 调用 Reachy 服务
+
+第三阶段开始，完整 ZeroClaw Rust 运行时可以把 Reachy 服务注册成真实工具。推荐先用
+dry-run 验证，再切到 simulator。
+
+终端 A：启动 Reachy 执行服务：
+
+```bash
+cd /Users/huyh/work/robot/zeroclaw-reachy-companion
+uv run python -m zeroclaw_reachy_companion.app \
+  --mode service \
+  --reachy-mode dry_run \
+  --llm mock \
+  --service-host 127.0.0.1 \
+  --service-port 8765
+```
+
+终端 B：启动完整 ZeroClaw，并把 Reachy 服务暴露为工具：
+
+```bash
+cd /Users/huyh/work/robot/zeroclaw/zeroclaw
+ZEROCLAW_REACHY_SERVICE_URL=http://127.0.0.1:8765 \
+cargo run -- gateway start --host 127.0.0.1 --port 9000
+```
+
+确认 ZeroClaw 已注册 Reachy 工具：
+
+```bash
+curl http://127.0.0.1:9000/api/tools | grep -E '"(speak|move_head|soothe_baby|dance)"'
+```
+
+通过 ZeroClaw 的文本入口触发完整链路：
+
+```bash
+curl -X POST http://127.0.0.1:9000/api/turns/text \
+  -H 'Content-Type: application/json' \
+  -d '{"text":"Can you nod gently?","session_id":"reachy-smoke"}'
+```
+
+只验证 Rust bridge 到已启动 Reachy 服务的工具调用：
+
+```bash
+cd /Users/huyh/work/robot/zeroclaw/zeroclaw
+ZEROCLAW_REACHY_SERVICE_URL=http://127.0.0.1:8765 \
+cargo test -p zeroclaw-tools reachy_service_integration_calls_running_service -- --ignored --nocapture
+```
+
+如果要接真实语音层，终端 C 启动 Reachy voice，并让 ASR 文本反调 ZeroClaw：
+
+```bash
+cd /Users/huyh/work/robot/zeroclaw-reachy-companion
+uv run python -m zeroclaw_reachy_companion.app \
+  --mode voice \
+  --reachy-mode dry_run \
+  --zeroclaw-text-url http://127.0.0.1:9000/api/turns/text \
+  --vad disabled \
+  --stt faster-whisper \
+  --stt-model small.en \
+  --stt-language en \
+  --tts kokoro \
+  --listen-mode continuous
 ```
 
 ### 启动可视化 simulator

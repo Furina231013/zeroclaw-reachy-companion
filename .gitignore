@@ -1,0 +1,9 @@
+.venv/
+.pytest_cache/
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Local Kokoro TTS model cache.
+kokoro-v*.onnx
+voices-v*.bin
